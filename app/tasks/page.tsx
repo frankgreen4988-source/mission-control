@@ -1,9 +1,7 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useState } from "react";
-import { Plus, Trash2, Edit2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Trash2 } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   backlog: "bg-slate-600",
@@ -19,32 +17,49 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function TasksPage() {
-  const tasks = useQuery(api.tasks.listTasks);
-  const createTask = useMutation(api.tasks.createTask);
-  const updateTask = useMutation(api.tasks.updateTask);
-  const deleteTask = useMutation(api.tasks.deleteTask);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [newTask, setNewTask] = useState({ title: "", description: "", assignedTo: "jimmy" });
 
-  const [newTask, setNewTask] = useState({ title: "", description: "", assignedTo: "jimmy" as const });
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const load = useCallback(() => {
+    fetch("/api/tasks").then((r) => r.json()).then(setTasks);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const handleCreate = async () => {
     if (!newTask.title) return;
-    await createTask({
-      ...newTask,
-      assignedTo: newTask.assignedTo,
-      priority: "medium",
+    await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...newTask, priority: "medium" }),
     });
     setNewTask({ title: "", description: "", assignedTo: "jimmy" });
+    load();
   };
 
-  const filteredTasks = tasks?.filter((t) => !filterStatus || t.status === filterStatus);
-
-  const groupedByStatus = {
-    backlog: filteredTasks?.filter((t: any) => t.status === "backlog") || [],
-    "in-progress": filteredTasks?.filter((t: any) => t.status === "in-progress") || [],
-    review: filteredTasks?.filter((t: any) => t.status === "review") || [],
-    done: filteredTasks?.filter((t: any) => t.status === "done") || [],
+  const handleDelete = async (id: string) => {
+    await fetch("/api/tasks", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ _id: id }),
+    });
+    load();
   };
+
+  const handleMove = async (id: string, newStatus: string) => {
+    await fetch("/api/tasks", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ _id: id, status: newStatus }),
+    });
+    load();
+  };
+
+  const statuses = ["backlog", "in-progress", "review", "done"];
+
+  const groupedByStatus = Object.fromEntries(
+    statuses.map((s) => [s, tasks.filter((t) => t.status === s)])
+  );
 
   return (
     <div className="p-8">
@@ -57,6 +72,7 @@ export default function TasksPage() {
             value={newTask.title}
             onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
             className="w-full bg-slate-700 text-white px-4 py-2 rounded mb-3"
+            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
           <input
             type="text"
@@ -68,16 +84,13 @@ export default function TasksPage() {
           <div className="flex gap-3">
             <select
               value={newTask.assignedTo}
-              onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value as any })}
+              onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
               className="bg-slate-700 text-white px-4 py-2 rounded flex-1"
             >
               <option value="jimmy">👤 Jimmy</option>
               <option value="sam">👤 Sam</option>
             </select>
-            <button
-              onClick={handleCreate}
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded flex items-center gap-2"
-            >
+            <button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded flex items-center gap-2">
               <Plus size={20} /> Create
             </button>
           </div>
@@ -85,29 +98,36 @@ export default function TasksPage() {
       </div>
 
       <div className="grid grid-cols-4 gap-6">
-        {Object.entries(groupedByStatus).map(([status, items]) => (
+        {statuses.map((status) => (
           <div key={status} className="bg-slate-800 rounded-lg p-4">
             <div className={`${statusColors[status]} px-3 py-1 rounded text-sm font-bold mb-4 inline-block`}>
               {status.toUpperCase()}
             </div>
             <div className="space-y-3">
-              {items.map((task: any) => (
+              {groupedByStatus[status]?.map((task: any) => (
                 <div key={task._id} className="bg-slate-700 p-4 rounded border border-slate-600 hover:border-slate-500">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-white">{task.title}</h3>
-                    <button
-                      onClick={() => deleteTask({ id: task._id })}
-                      className="text-red-400 hover:text-red-300"
-                    >
+                    <button onClick={() => handleDelete(task._id)} className="text-red-400 hover:text-red-300">
                       <Trash2 size={16} />
                     </button>
                   </div>
                   {task.description && <p className="text-sm text-slate-300 mb-2">{task.description}</p>}
-                  <div className="flex justify-between items-center">
-                    <span className={`text-xs ${priorityColors[task.priority]}`}>
-                      {task.priority.toUpperCase()}
-                    </span>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`text-xs ${priorityColors[task.priority]}`}>{task.priority?.toUpperCase()}</span>
                     <span className="text-xs text-slate-400">👤 {task.assignedTo}</span>
+                  </div>
+                  {/* Move buttons */}
+                  <div className="flex gap-1 flex-wrap">
+                    {statuses.filter((s) => s !== status).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => handleMove(task._id, s)}
+                        className="text-xs bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded"
+                      >
+                        → {s}
+                      </button>
+                    ))}
                   </div>
                 </div>
               ))}

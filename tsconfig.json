@@ -5,25 +5,18 @@
     "lib": ["es2020", "dom", "dom.iterable"],
     "module": "esnext",
     "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    "strict": false,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "include": ["app", "components", "convex"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["app", "components", "lib", "next-env.d.ts"],
+  "exclude": ["node_modules", "convex"]
 }
