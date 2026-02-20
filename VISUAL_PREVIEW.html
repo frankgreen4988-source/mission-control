@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control - Visual Preview</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #f1f5f9;
+            display: flex;
+            height: 100vh;
+        }
+        .nav { width: 16%; background: #1e293b; border-right: 1px solid #334155; padding: 24px; overflow-y: auto; }
+        .nav h1 { font-size: 24px; font-weight: bold; margin-bottom: 8px; }
+        .nav p { font-size: 12px; color: #94a3b8; margin-bottom: 24px; }
+        .nav ul { list-style: none; }
+        .nav li { margin: 12px 0; }
+        .nav a {
+            display: flex;
+            gap: 12px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav a:hover { background: #334155; color: #fff; }
+        .nav a.active { background: #2563eb; color: #fff; }
+        .main { flex: 1; overflow-y: auto; padding: 32px; }
+        h1 { font-size: 48px; font-weight: bold; margin-bottom: 16px; }
+        .subtitle { font-size: 20px; color: #94a3b8; margin-bottom: 48px; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 48px; }
+        .stat { padding: 24px; border-radius: 8px; background: linear-gradient(135deg, var(--color-from) 0%, var(--color-to) 100%); }
+        .stat:nth-child(1) { --color-from: #2563eb; --color-to: #1e40af; }
+        .stat:nth-child(2) { --color-from: #16a34a; --color-to: #166534; }
+        .stat:nth-child(3) { --color-from: #a855f7; --color-to: #7e22ce; }
+        .stat:nth-child(4) { --color-from: #f97316; --color-to: #ea580c; }
+        .stat-label { font-size: 12px; color: #cbd5e1; margin-bottom: 8px; }
+        .stat-number { font-size: 36px; font-weight: bold; }
+        .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .card {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .card:hover { border-color: #3b82f6; }
+        .card h2 { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
+        .card p { font-size: 14px; color: #cbd5e1; margin-bottom: 16px; }
+        .card-link { color: #3b82f6; display: flex; align-items: center; gap: 8px; }
+        .task-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .column { background: #1e293b; padding: 16px; border-radius: 8px; }
+        .column-title { font-weight: bold; padding: 8px; margin-bottom: 8px; border-radius: 4px; display: inline-block; font-size: 12px; }
+        .backlog { background: #475569; }
+        .in-progress { background: #2563eb; }
+        .review { background: #eab308; }
+        .done { background: #16a34a; }
+        .task-card { background: #334155; padding: 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #475569; }
+        .task-card h3 { font-size: 13px; margin-bottom: 6px; }
+        .task-card p { font-size: 11px; color: #cbd5e1; }
+        .pipeline {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .pipeline-stage {
+            flex-shrink: 0;
+            width: 280px;
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .pipeline-title { font-weight: bold; color: #60a5fa; margin-bottom: 12px; }
+        .content-card { background: #334155; padding: 12px; border-radius: 6px; margin-bottom: 8px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .memory { background: #1e293b; padding: 16px; border-radius: 8px; border: 1px solid #334155; }
+        .memory-title { font-weight: bold; margin-bottom: 8px; }
+        .memory-category { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin-bottom: 8px; }
+        .insight { background: #003d82; }
+        .lesson { background: #064e3b; }
+        .strategy { background: #7c2d12; }
+        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .team-member { background: #1e293b; padding: 16px; border-radius: 8px; }
+        .avatar { font-size: 40px; margin-bottom: 8px; }
+        .member-name { font-weight: bold; }
+        .member-role { font-size: 12px; color: #94a3b8; }
+        .office-floorplan {
+            background: linear-gradient(135deg, #334155 0%, #475569 100%);
+            padding: 24px;
+            border-radius: 8px;
+            height: 300px;
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .desk {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        .desk:hover { border-color: #3b82f6; }
+        .desk1 { top: 20px; left: 20px; }
+        .desk2 { top: 20px; left: 50%; transform: translateX(-50%); }
+        .desk3 { top: 20px; right: 20px; }
+        .desk4 { bottom: 20px; left: 20px; }
+        .desk5 { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .desk6 { bottom: 20px; right: 20px; }
+        .tab { display: none; }
+        .tab.active { display: block; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #334155;
+            color: #94a3b8;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            background: #2563eb;
+            color: #fff;
+        }
+        .tab-button:hover { background: #475569; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav">
+        <h1>⚡ Mission Control</h1>
+        <p>Sam & Jimmy's Operations Hub</p>
+        <ul>
+            <li><a class="nav-link active" onclick="showTab('home')">🏠 Home</a></li>
+            <li><a class="nav-link" onclick="showTab('tasks')">📋 Tasks</a></li>
+            <li><a class="nav-link" onclick="showTab('content')">⚡ Content</a></li>
+            <li><a class="nav-link" onclick="showTab('calendar')">📅 Calendar</a></li>
+            <li><a class="nav-link" onclick="showTab('memories')">🧠 Memories</a></li>
+            <li><a class="nav-link" onclick="showTab('team')">👥 Team</a></li>
+            <li><a class="nav-link" onclick="showTab('office')">🏢 Office</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <!-- HOME TAB -->
+        <div id="home" class="tab active">
+            <h1>⚡ Mission Control Dashboard</h1>
+            <p class="subtitle">Welcome to the operations hub for Sam & Jimmy</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Total Tasks</div>
+                    <div class="stat-number">24</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">In Progress</div>
+                    <div class="stat-number">7</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-number">12</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Team Members</div>
+                    <div class="stat-number">8</div>
+                </div>
+            </div>
+
+            <div class="cards">
+                <div class="card" onclick="showTab('tasks')">
+                    <h2>📋 Task Board</h2>
+                    <p>Manage all your tasks and track progress</p>
+                    <div class="card-link">View Board →</div>
+                </div>
+                <div class="card" onclick="showTab('content')">
+                    <h2>⚡ Content Pipeline</h2>
+                    <p>Create and manage content through all stages</p>
+                    <div class="card-link">View Pipeline →</div>
+                </div>
+                <div class="card" onclick="showTab('calendar')">
+                    <h2>📅 Calendar</h2>
+                    <p>Schedule tasks, meetings, and cron jobs</p>
+                    <div class="card-link">View Calendar →</div>
+                </div>
+                <div class="card" onclick="showTab('memories')">
+                    <h2>🧠 Memories</h2>
+                    <p>Store and search insights and learnings</p>
+                    <div class="card-link">View Memories →</div>
+                </div>
+                <div class="card" onclick="showTab('team')">
+                    <h2>👥 Team Structure</h2>
+                    <p>View team members and subagents</p>
+                    <div class="card-link">View Team →</div>
+                </div>
+                <div class="card" onclick="showTab('office')">
+                    <h2>🏢 Digital Office</h2>
+                    <p>See team members at work in real-time</p>
+                    <div class="card-link">View Office →</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TASKS TAB -->
+        <div id="tasks" class="tab">
+            <h1>📋 Task Board</h1>
+            <p class="subtitle">Kanban workflow for all work</p>
+            
+            <div class="task-board">
+                <div class="column">
+                    <div class="column-title backlog">BACKLOG</div>
+                    <div class="task-card">
+                        <h3>Setup Convex database</h3>
+                        <p>🔴 HIGH | 👤 Jimmy</p>
+                    </div>
+                    <div class="task-card">
+                        <h3>Test 30-share positions</h3>
+                        <p>🟡 MEDIUM | 👤 Sam</p>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="column-title in-progress">IN-PROGRESS</div>
+                    <div class="task-card">
+                        <h3>Polymarket 40-share test</h3>
+                        <p>🔴 HIGH | 👤 Jimmy</p>
+                    </div>
+                    <div class="task-card">
+                        <h3>Trading bot monitoring</h3>
+                        <p>🟡 MEDIUM | 👤 Sam</p>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="column-title review">REVIEW</div>
+                    <div class="task-card">
+                        <h3>Document trading edge</h3>
+                        <p>🟡 MEDIUM | 👤 Jimmy</p>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="column-title done">DONE</div>
+                    <div class="task-card">
+                        <h3>Deploy Mission Control</h3>
+                        <p>🔴 HIGH | 👤 Jimmy</p>
+                    </div>
+                    <div class="task-card">
+                        <h3>Research Kalshi arbs</h3>
+                        <p>🔵 LOW | 👤 Sam</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT TAB -->
+        <div id="content" class="tab">
+            <h1>⚡ Content Pipeline</h1>
+            <p class="subtitle">Track content through 6 stages</p>
+            
+            <div class="pipeline">
+                <div class="pipeline-stage">
+                    <div class="pipeline-title">💡 IDEA</div>
+                    <div class="content-card">
+                        <h4>Trading Strategy Guide</h4>
+                        <p style="font-size: 11px; color: #94a3b8;">Initial concept for arb documentation</p>
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-title">📋 OUTLINE</div>
+                    <div class="content-card">
+                        <h4>Polymarket Edge Analysis</h4>
+                        <p style="font-size: 11px; color: #94a3b8;">Structure defined</p>
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-title">✍️ DRAFT</div>
+                    <div class="content-card">
+                        <h4>Infrastructure Trading</h4>
+                        <p style="font-size: 11px; color: #94a3b8;">First version written</p>
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-title">📝 SCRIPT</div>
+                    <div class="content-card">
+                        <h4>Bot Deployment Guide</h4>
+                        <p style="font-size: 11px; color: #94a3b8;">Ready for recording</p>
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-title">👀 REVIEW</div>
+                    <div class="content-card">
+                        <h4>Testing Procedures</h4>
+                        <p style="font-size: 11px; color: #94a3b8;">In QA</p>
+                    </div>
+                </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-title">🚀 PUBLISHED</div>
+                    <div class="content-card">
+                        <h4>Trading Playbook v1</h4>
+                        <p style="font-size: 11px; color: #94a3b8;">Live</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEMORIES TAB -->
+        <div id="memories" class="tab">
+            <h1>🧠 Memories</h1>
+            <p class="subtitle">Beautiful knowledge base with search</p>
+            
+            <div style="margin-bottom: 24px;">
+                <input type="text" placeholder="Search memories..." style="width: 100%; padding: 12px; background: #1e293b; border: 1px solid #334155; border-radius: 6px; color: #fff;">
+            </div>
+
+            <div class="grid-2">
+                <div class="memory">
+                    <div class="memory-category insight">INSIGHT</div>
+                    <div class="memory-title">Infrastructure Edge Found</div>
+                    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px;">Chainlink oracle gives us 1-60s lead time vs Polymarket UI. This creates a 95%+ win rate on infrastructure trades.</p>
+                    <div style="font-size: 11px; color: #94a3b8;">#trading #polymarket #edge</div>
+                </div>
+
+                <div class="memory">
+                    <div class="memory-category lesson">LESSON</div>
+                    <div class="memory-title">Dutch Book Betting Rule</div>
+                    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px;">Never spread equal bets across all buckets. Total outlay must be less than cheapest winning payout.</p>
+                    <div style="font-size: 11px; color: #94a3b8;">#strategy #portfolio</div>
+                </div>
+
+                <div class="memory">
+                    <div class="memory-category strategy">STRATEGY</div>
+                    <div class="memory-title">25 Shares Validation</div>
+                    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px;">Tested 25 shares/side without market impact. Ready to scale to 30+ for next phase testing.</p>
+                    <div style="font-size: 11px; color: #94a3b8;">#scaling #trading</div>
+                </div>
+
+                <div class="memory">
+                    <div class="memory-category insight">INSIGHT</div>
+                    <div class="memory-title">Volume Window Correlation</div>
+                    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px;">11:00-14:00 EST peak volume = 40-70% fill rate. Pre-peak (04:00-10:00) = 0% fill. Massive difference.</p>
+                    <div style="font-size: 11px; color: #94a3b8;">#timing #liquidity</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAM TAB -->
+        <div id="team" class="tab">
+            <h1>👥 Team Structure</h1>
+            <p class="subtitle">Team members organized by role</p>
+            
+            <h3 style="margin: 24px 0 12px; color: #60a5fa;">🔴 LEAD</h3>
+            <div class="team-grid" style="grid-template-columns: repeat(1, 1fr);">
+                <div class="team-member">
+                    <div class="avatar">👤</div>
+                    <div class="member-name">Sam</div>
+                    <div class="member-role">Human | Chief Strategist</div>
+                    <div style="font-size: 12px; color: #16a34a; margin-top: 8px;">● Working</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 24px 0 12px; color: #3b82f6;">🔵 DEVELOPERS</h3>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="avatar">⚡</div>
+                    <div class="member-name">Jimmy</div>
+                    <div class="member-role">Human | Full Stack</div>
+                    <div style="font-size: 12px; color: #16a34a; margin-top: 8px;">● At Desk</div>
+                </div>
+                <div class="team-member">
+                    <div class="avatar">🤖</div>
+                    <div class="member-name">TradingBot</div>
+                    <div class="member-role">Subagent | Arb Blaster</div>
+                    <div style="font-size: 12px; color: #16a34a; margin-top: 8px;">● Working</div>
+                </div>
+                <div class="team-member">
+                    <div class="avatar">🔍</div>
+                    <div class="member-name">ResearchBot</div>
+                    <div class="member-role">Subagent | Analysis</div>
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 8px;">○ Idle</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 24px 0 12px; color: #16a34a;">🟢 WRITERS</h3>
+            <div class="team-grid" style="grid-template-columns: repeat(1, 1fr);">
+                <div class="team-member">
+                    <div class="avatar">✍️</div>
+                    <div class="member-name">ContentBot</div>
+                    <div class="member-role">Subagent | Documentation</div>
+                    <div style="font-size: 12px; color: #16a34a; margin-top: 8px;">● Working</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OFFICE TAB -->
+        <div id="office" class="tab">
+            <h1>🏢 Digital Office</h1>
+            <p class="subtitle">Real-time team presence and activity</p>
+            
+            <h3 style="margin: 24px 0 16px;">Office Floorplan</h3>
+            <div class="office-floorplan">
+                <div class="desk desk1" title="Jimmy">⚡</div>
+                <div class="desk desk2" title="Sam">👤</div>
+                <div class="desk desk3" title="Empty">💼</div>
+                <div class="desk desk4" title="Empty">💼</div>
+                <div class="desk desk5" title="TradingBot">🤖</div>
+                <div class="desk desk6" title="ContentBot">✍️</div>
+            </div>
+
+            <h3 style="margin: 24px 0 16px;">Team Status</h3>
+            <div style="background: #1e293b; border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155;">
+                    <div>
+                        <div style="font-weight: bold;">⚡ Jimmy</div>
+                        <div style="font-size: 12px; color: #16a34a;">● At Desk</div>
+                    </div>
+                    <div style="font-size: 12px; color: #cbd5e1;">Polymarket trading</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155;">
+                    <div>
+                        <div style="font-weight: bold;">👤 Sam</div>
+                        <div style="font-size: 12px; color: #3b82f6;">◉ In Meeting</div>
+                    </div>
+                    <div style="font-size: 12px; color: #cbd5e1;">Strategy sync</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                    <div>
+                        <div style="font-weight: bold;">🤖 TradingBot</div>
+                        <div style="font-size: 12px; color: #16a34a;">● Working</div>
+                    </div>
+                    <div style="font-size: 12px; color: #cbd5e1;">Running arb blaster</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALENDAR TAB -->
+        <div id="calendar" class="tab">
+            <h1>📅 Calendar</h1>
+            <p class="subtitle">All scheduled work and reminders</p>
+            
+            <div style="background: #1e293b; border-radius: 8px; padding: 24px;">
+                <h3 style="margin-bottom: 16px; color: #60a5fa;">Friday, February 20</h3>
+                <div style="space-y: 12px;">
+                    <div style="background: #2563eb; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                        <div style="font-weight: bold;">Peak Trading Window Opens</div>
+                        <div style="font-size: 12px; color: #e0e7ff;">16:00 UTC | 👤 Jimmy</div>
+                    </div>
+                    <div style="background: #a855f7; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                        <div style="font-weight: bold;">Arb Bot Monitoring (Cron)</div>
+                        <div style="font-size: 12px; color: #f3e8ff;">16:00-19:00 UTC | 👤 Jimmy</div>
+                    </div>
+                    <div style="background: #16a34a; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                        <div style="font-weight: bold;">Daily Review Meeting</div>
+                        <div style="font-size: 12px; color: #dcfce7;">18:00 UTC | Both</div>
+                    </div>
+                    <div style="background: #dc2626; padding: 12px; border-radius: 6px;">
+                        <div style="font-weight: bold;">Results Analysis Deadline</div>
+                        <div style="font-size: 12px; color: #fee2e2;">19:00 UTC | 👤 Sam</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
