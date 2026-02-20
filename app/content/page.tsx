@@ -36,7 +36,7 @@ export default function ContentPage() {
   const groupedByStage = Object.fromEntries(
     stages.map((stage) => [
       stage,
-      content?.filter((c) => c.stage === stage) || [],
+      content?.filter((c: any) => c.stage === stage) || [],
     ])
   );
 

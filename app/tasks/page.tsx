@@ -40,10 +40,10 @@ export default function TasksPage() {
   const filteredTasks = tasks?.filter((t) => !filterStatus || t.status === filterStatus);
 
   const groupedByStatus = {
-    backlog: filteredTasks?.filter((t) => t.status === "backlog") || [],
-    "in-progress": filteredTasks?.filter((t) => t.status === "in-progress") || [],
-    review: filteredTasks?.filter((t) => t.status === "review") || [],
-    done: filteredTasks?.filter((t) => t.status === "done") || [],
+    backlog: filteredTasks?.filter((t: any) => t.status === "backlog") || [],
+    "in-progress": filteredTasks?.filter((t: any) => t.status === "in-progress") || [],
+    review: filteredTasks?.filter((t: any) => t.status === "review") || [],
+    done: filteredTasks?.filter((t: any) => t.status === "done") || [],
   };
 
   return (

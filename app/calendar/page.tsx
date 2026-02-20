@@ -42,7 +42,7 @@ export default function CalendarPage() {
   };
 
   const eventsByDate: Record<string, any[]> = {};
-  events?.forEach((event) => {
+  events?.forEach((event: any) => {
     const dateKey = format(new Date(event.startTime), "yyyy-MM-dd");
     if (!eventsByDate[dateKey]) eventsByDate[dateKey] = [];
     eventsByDate[dateKey].push(event);
