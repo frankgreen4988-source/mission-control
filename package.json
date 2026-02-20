@@ -25,7 +25,6 @@
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
     "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0",
-    "convex-cli": "^1.0.0"
+    "postcss": "^8.4.0"
   }
 }
