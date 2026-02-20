@@ -1,26 +1,29 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { useLocalStorage } from "@/lib/useLocalState";
 
 export default function Home() {
-  const [tasks] = useLocalStorage<any[]>("tasks", []);
-  const [teamMembers] = useLocalStorage<any[]>("team", []);
+  const tasks = useQuery(api.tasks.listTasks);
+  const memories = useQuery(api.memories.listMemories, {});
+  const teamMembers = useQuery(api.team.listTeamMembers);
 
   const taskStats = {
-    total: tasks.length,
-    inProgress: tasks.filter((t) => t.status === "in-progress").length,
-    done: tasks.filter((t) => t.status === "done").length,
+    total: tasks?.length || 0,
+    inProgress: tasks?.filter((t) => t.status === "in-progress").length || 0,
+    done: tasks?.filter((t) => t.status === "done").length || 0,
   };
 
   return (
     <div className="p-8">
       <div className="mb-12">
-        <h1 className="text-5xl font-bold mb-3">⚡ Mission Control</h1>
-        <p className="text-xl text-slate-400">Operations hub for Sam &amp; Jimmy</p>
+        <h1 className="text-5xl font-bold mb-3">⚡ Mission Control Dashboard</h1>
+        <p className="text-xl text-slate-400">Welcome to the operations hub for Sam & Jimmy</p>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-4 gap-6 mb-12">
         <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-lg">
           <p className="text-slate-300 text-sm mb-2">Total Tasks</p>
@@ -36,26 +39,96 @@ export default function Home() {
         </div>
         <div className="bg-gradient-to-br from-orange-600 to-orange-800 p-6 rounded-lg">
           <p className="text-slate-300 text-sm mb-2">Team Members</p>
-          <p className="text-4xl font-bold">{teamMembers.length}</p>
+          <p className="text-4xl font-bold">{teamMembers?.length || 0}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        {[
-          { href: "/tasks", icon: "📋", title: "Task Board", desc: "Manage all tasks and track progress", color: "blue" },
-          { href: "/content", icon: "⚡", title: "Content Pipeline", desc: "Create and manage content through stages", color: "green" },
-          { href: "/calendar", icon: "📅", title: "Calendar", desc: "Schedule tasks, meetings, and cron jobs", color: "purple" },
-          { href: "/memories", icon: "🧠", title: "Memories", desc: "Store and search insights and learnings", color: "yellow" },
-          { href: "/team", icon: "👥", title: "Team Structure", desc: "View team members and subagents", color: "red" },
-          { href: "/office", icon: "🏢", title: "Digital Office", desc: "See team members at work in real-time", color: "cyan" },
-        ].map((item) => (
-          <Link key={item.href} href={item.href}
-            className={`bg-slate-800 border-2 border-slate-700 p-6 rounded-lg hover:border-${item.color}-500 transition group`}>
-            <h2 className="text-2xl font-bold mb-2">{item.icon} {item.title}</h2>
-            <p className="text-slate-400 mb-4">{item.desc}</p>
-            <div className={`flex items-center text-${item.color}-400`}>View <ArrowRight size={20} className="ml-2" /></div>
-          </Link>
-        ))}
+      {/* Quick Links */}
+      <div className="grid grid-cols-2 gap-6 mb-12">
+        <Link
+          href="/tasks"
+          className="bg-slate-800 border-2 border-slate-700 p-6 rounded-lg hover:border-blue-500 transition group"
+        >
+          <h2 className="text-2xl font-bold mb-2 group-hover:text-blue-400 transition">📋 Task Board</h2>
+          <p className="text-slate-400 mb-4">Manage all your tasks and track progress</p>
+          <div className="flex items-center text-blue-400 group-hover:translate-x-2 transition">
+            View Board <ArrowRight size={20} className="ml-2" />
+          </div>
+        </Link>
+
+        <Link
+          href="/content"
+          className="bg-slate-800 border-2 border-slate-700 p-6 rounded-lg hover:border-green-500 transition group"
+        >
+          <h2 className="text-2xl font-bold mb-2 group-hover:text-green-400 transition">⚡ Content Pipeline</h2>
+          <p className="text-slate-400 mb-4">Create and manage content through all stages</p>
+          <div className="flex items-center text-green-400 group-hover:translate-x-2 transition">
+            View Pipeline <ArrowRight size={20} className="ml-2" />
+          </div>
+        </Link>
+
+        <Link
+          href="/calendar"
+          className="bg-slate-800 border-2 border-slate-700 p-6 rounded-lg hover:border-purple-500 transition group"
+        >
+          <h2 className="text-2xl font-bold mb-2 group-hover:text-purple-400 transition">📅 Calendar</h2>
+          <p className="text-slate-400 mb-4">Schedule tasks, meetings, and cron jobs</p>
+          <div className="flex items-center text-purple-400 group-hover:translate-x-2 transition">
+            View Calendar <ArrowRight size={20} className="ml-2" />
+          </div>
+        </Link>
+
+        <Link
+          href="/memories"
+          className="bg-slate-800 border-2 border-slate-700 p-6 rounded-lg hover:border-yellow-500 transition group"
+        >
+          <h2 className="text-2xl font-bold mb-2 group-hover:text-yellow-400 transition">🧠 Memories</h2>
+          <p className="text-slate-400 mb-4">Store and search insights and learnings</p>
+          <div className="flex items-center text-yellow-400 group-hover:translate-x-2 transition">
+            View Memories <ArrowRight size={20} className="ml-2" />
+          </div>
+        </Link>
+
+        <Link
+          href="/team"
+          className="bg-slate-800 border-2 border-slate-700 p-6 rounded-lg hover:border-red-500 transition group"
+        >
+          <h2 className="text-2xl font-bold mb-2 group-hover:text-red-400 transition">👥 Team Structure</h2>
+          <p className="text-slate-400 mb-4">View team members and subagents</p>
+          <div className="flex items-center text-red-400 group-hover:translate-x-2 transition">
+            View Team <ArrowRight size={20} className="ml-2" />
+          </div>
+        </Link>
+
+        <Link
+          href="/office"
+          className="bg-slate-800 border-2 border-slate-700 p-6 rounded-lg hover:border-cyan-500 transition group"
+        >
+          <h2 className="text-2xl font-bold mb-2 group-hover:text-cyan-400 transition">🏢 Digital Office</h2>
+          <p className="text-slate-400 mb-4">See team members at work in real-time</p>
+          <div className="flex items-center text-cyan-400 group-hover:translate-x-2 transition">
+            View Office <ArrowRight size={20} className="ml-2" />
+          </div>
+        </Link>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-slate-800 border-2 border-slate-700 p-6 rounded-lg">
+        <h2 className="text-2xl font-bold mb-4">📊 System Status</h2>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center pb-3 border-b border-slate-700">
+            <span className="text-slate-400">Database</span>
+            <span className="text-green-400">● Connected</span>
+          </div>
+          <div className="flex justify-between items-center pb-3 border-b border-slate-700">
+            <span className="text-slate-400">Convex Sync</span>
+            <span className="text-green-400">● Active</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-slate-400">Last Sync</span>
+            <span className="text-slate-300">{new Date().toLocaleTimeString()}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
