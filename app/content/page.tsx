@@ -14,7 +14,6 @@ export default function ContentPage() {
   const deleteContent = useMutation(api.content.deleteContent);
 
   const [newItem, setNewItem] = useState({ title: "", idea: "", assignedTo: "jimmy" as const });
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleCreate = async () => {
