@@ -21,7 +21,7 @@ export default function TasksPage() {
   const [newTask, setNewTask] = useState({ title: "", description: "", assignedTo: "jimmy" });
 
   const load = useCallback(() => {
-    fetch("/api/tasks").then((r) => r.json()).then(setTasks);
+    fetch("/api/tasks?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Fetched tasks:", data); setTasks(data); }).catch((err) => console.error("Tasks fetch error:", err));
   }, []);
 
   useEffect(() => { load(); }, [load]);

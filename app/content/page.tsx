@@ -11,7 +11,7 @@ export default function ContentPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    fetch("/api/content").then((r) => r.json()).then(setContent);
+    fetch("/api/content?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Fetched content:", data); setContent(data); }).catch((err) => console.error("Content fetch error:", err));
   }, []);
 
   useEffect(() => { load(); }, [load]);

@@ -9,7 +9,7 @@ export default function CalendarPage() {
   const [newEvent, setNewEvent] = useState({ title: "", type: "task", assignedTo: "both", startTime: Date.now() });
 
   const load = useCallback(() => {
-    fetch("/api/calendar").then((r) => r.json()).then(setEvents);
+    fetch("/api/calendar?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Fetched calendar:", data); setEvents(data); }).catch((err) => console.error("Calendar fetch error:", err));
   }, []);
 
   useEffect(() => { load(); }, [load]);

@@ -20,7 +20,7 @@ export default function MemoriesPage() {
   const [tagInput, setTagInput] = useState("");
 
   const load = useCallback(() => {
-    fetch("/api/memories").then((r) => r.json()).then(setMemories);
+    fetch("/api/memories?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Fetched memories:", data); setMemories(data); }).catch((err) => console.error("Memories fetch error:", err));
   }, []);
 
   useEffect(() => { load(); }, [load]);

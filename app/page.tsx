@@ -10,9 +10,9 @@ export default function Home() {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/tasks").then((r) => r.json()).then(setTasks);
-    fetch("/api/memories").then((r) => r.json()).then(setMemories);
-    fetch("/api/team").then((r) => r.json()).then(setTeamMembers);
+    fetch("/api/tasks?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Dashboard tasks:", data); setTasks(data); }).catch((err) => console.error("Dashboard tasks error:", err));
+    fetch("/api/memories?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Dashboard memories:", data); setMemories(data); }).catch((err) => console.error("Dashboard memories error:", err));
+    fetch("/api/team?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Dashboard team:", data); setTeamMembers(data); }).catch((err) => console.error("Dashboard team error:", err));
   }, []);
 
   const taskStats = {

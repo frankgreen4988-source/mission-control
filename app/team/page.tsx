@@ -12,7 +12,7 @@ export default function TeamPage() {
   const [skillInput, setSkillInput] = useState("");
 
   const load = useCallback(() => {
-    fetch("/api/team").then((r) => r.json()).then(setMembers);
+    fetch("/api/team?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Fetched team:", data); setMembers(data); }).catch((err) => console.error("Team fetch error:", err));
   }, []);
 
   useEffect(() => { load(); }, [load]);

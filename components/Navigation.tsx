@@ -54,7 +54,7 @@ export default function Navigation() {
 
       <div className="border-t border-slate-700 pt-4 mt-4">
         <p className="text-xs text-slate-500">
-          Last sync: {new Date().toLocaleTimeString()}
+          ⚡ Mission Control v1
         </p>
       </div>
     </nav>

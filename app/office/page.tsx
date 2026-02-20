@@ -25,8 +25,8 @@ export default function OfficePage() {
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    fetch("/api/team").then((r) => r.json()).then(setMembers);
-    fetch("/api/office").then((r) => r.json()).then(setOfficeStatus);
+    fetch("/api/team?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Fetched team (office):", data); setMembers(data); }).catch((err) => console.error("Team fetch error:", err));
+    fetch("/api/office?t=" + Date.now()).then((r) => r.json()).then((data) => { console.log("Fetched office:", data); setOfficeStatus(data); }).catch((err) => console.error("Office fetch error:", err));
   }, []);
 
   useEffect(() => { load(); }, [load]);

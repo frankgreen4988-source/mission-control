@@ -1,4 +1,4 @@
-import { put, head } from "@vercel/blob";
+import { put, list } from "@vercel/blob";
 
 const BLOB_AVAILABLE = !!process.env.BLOB_READ_WRITE_TOKEN;
 
@@ -17,12 +17,31 @@ export async function readCollection<T = any>(collection: string): Promise<T[]> 
 
   try {
     const key = blobKey(collection);
-    const meta = await head(key);
-    const res = await fetch(meta.url);
-    if (!res.ok) return [];
-    return (await res.json()) as T[];
-  } catch {
-    // Blob doesn't exist yet
+    console.log(`[db] Reading collection "${collection}" with key "${key}"`);
+    
+    // Use list() to find the blob by prefix, then fetch its URL
+    // head() requires a full URL, not a pathname - list() works with prefixes
+    const { blobs } = await list({ prefix: key, limit: 1 });
+    
+    if (blobs.length === 0) {
+      console.log(`[db] No blob found for "${collection}" - returning empty array`);
+      return [];
+    }
+
+    const blobUrl = blobs[0].url;
+    console.log(`[db] Found blob at: ${blobUrl}`);
+    
+    const res = await fetch(blobUrl, { cache: "no-store" });
+    if (!res.ok) {
+      console.error(`[db] Fetch failed for "${collection}": ${res.status}`);
+      return [];
+    }
+    
+    const data = await res.json();
+    console.log(`[db] Read ${Array.isArray(data) ? data.length : 0} items from "${collection}"`);
+    return data as T[];
+  } catch (err) {
+    console.error(`[db] Error reading "${collection}":`, err);
     return [];
   }
 }
@@ -34,6 +53,7 @@ export async function writeCollection<T = any>(collection: string, data: T[]): P
   }
 
   const key = blobKey(collection);
+  console.log(`[db] Writing ${data.length} items to "${collection}"`);
   await put(key, JSON.stringify(data), {
     access: "public",
     addRandomSuffix: false,
