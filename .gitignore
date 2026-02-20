@@ -35,3 +35,4 @@ convex/.convex/
 # OS
 Thumbs.db
 .vercel
+.env*.local
