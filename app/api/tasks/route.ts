@@ -14,14 +14,14 @@ interface Task {
 }
 
 export async function GET() {
-  const tasks = readCollection<Task>("tasks");
+  const tasks = await readCollection<Task>("tasks");
   tasks.sort((a, b) => b.updatedAt - a.updatedAt);
   return NextResponse.json(tasks);
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const tasks = readCollection<Task>("tasks");
+  const tasks = await readCollection<Task>("tasks");
   const now = Date.now();
   const task: Task = {
     _id: generateId(),
@@ -35,25 +35,25 @@ export async function POST(req: NextRequest) {
     updatedAt: now,
   };
   tasks.push(task);
-  writeCollection("tasks", tasks);
+  await writeCollection("tasks", tasks);
   return NextResponse.json(task);
 }
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { _id, ...updates } = body;
-  const tasks = readCollection<Task>("tasks");
+  const tasks = await readCollection<Task>("tasks");
   const idx = tasks.findIndex((t) => t._id === _id);
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
   tasks[idx] = { ...tasks[idx], ...updates, updatedAt: Date.now() };
-  writeCollection("tasks", tasks);
+  await writeCollection("tasks", tasks);
   return NextResponse.json(tasks[idx]);
 }
 
 export async function DELETE(req: NextRequest) {
   const { _id } = await req.json();
-  let tasks = readCollection<Task>("tasks");
+  let tasks = await readCollection<Task>("tasks");
   tasks = tasks.filter((t) => t._id !== _id);
-  writeCollection("tasks", tasks);
+  await writeCollection("tasks", tasks);
   return NextResponse.json({ ok: true });
 }

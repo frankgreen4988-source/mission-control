@@ -1,22 +1,25 @@
-import fs from "fs";
-import path from "path";
+import { kv } from "@vercel/kv";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const KV_AVAILABLE = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 
-function filePath(collection: string): string {
-  return path.join(DATA_DIR, `${collection}.json`);
+// In-memory fallback when KV is not configured (local dev / pre-setup)
+const memoryStore: Record<string, any[]> = {};
+
+export async function readCollection<T = any>(collection: string): Promise<T[]> {
+  if (!KV_AVAILABLE) {
+    console.warn(`[db] Vercel KV not configured – using in-memory fallback for "${collection}"`);
+    return (memoryStore[collection] ?? []) as T[];
+  }
+  const data = await kv.get<T[]>(`collection:${collection}`);
+  return data ?? [];
 }
 
-export function readCollection<T = any>(collection: string): T[] {
-  const fp = filePath(collection);
-  if (!fs.existsSync(fp)) return [];
-  return JSON.parse(fs.readFileSync(fp, "utf-8"));
-}
-
-export function writeCollection<T = any>(collection: string, data: T[]): void {
-  const fp = filePath(collection);
-  fs.mkdirSync(path.dirname(fp), { recursive: true });
-  fs.writeFileSync(fp, JSON.stringify(data, null, 2));
+export async function writeCollection<T = any>(collection: string, data: T[]): Promise<void> {
+  if (!KV_AVAILABLE) {
+    memoryStore[collection] = data;
+    return;
+  }
+  await kv.set(`collection:${collection}`, data);
 }
 
 export function generateId(): string {

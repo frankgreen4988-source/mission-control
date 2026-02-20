@@ -14,7 +14,7 @@ interface Memory {
 }
 
 export async function GET() {
-  const memories = readCollection<Memory>("memories");
+  const memories = await readCollection<Memory>("memories");
   memories.sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
     return b.updatedAt - a.updatedAt;
@@ -24,7 +24,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const memories = readCollection<Memory>("memories");
+  const memories = await readCollection<Memory>("memories");
   const now = Date.now();
   const memory: Memory = {
     _id: generateId(),
@@ -38,25 +38,25 @@ export async function POST(req: NextRequest) {
     isPinned: false,
   };
   memories.push(memory);
-  writeCollection("memories", memories);
+  await writeCollection("memories", memories);
   return NextResponse.json(memory);
 }
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { _id, ...updates } = body;
-  const memories = readCollection<Memory>("memories");
+  const memories = await readCollection<Memory>("memories");
   const idx = memories.findIndex((m) => m._id === _id);
   if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
   memories[idx] = { ...memories[idx], ...updates, updatedAt: Date.now() };
-  writeCollection("memories", memories);
+  await writeCollection("memories", memories);
   return NextResponse.json(memories[idx]);
 }
 
 export async function DELETE(req: NextRequest) {
   const { _id } = await req.json();
-  let memories = readCollection<Memory>("memories");
+  let memories = await readCollection<Memory>("memories");
   memories = memories.filter((m) => m._id !== _id);
-  writeCollection("memories", memories);
+  await writeCollection("memories", memories);
   return NextResponse.json({ ok: true });
 }

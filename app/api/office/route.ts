@@ -12,8 +12,8 @@ interface OfficeStatus {
 }
 
 export async function GET() {
-  const statuses = readCollection<OfficeStatus>("office");
-  const team = readCollection("team");
+  const statuses = await readCollection<OfficeStatus>("office");
+  const team = await readCollection("team");
   const enriched = statuses.map((s) => ({
     ...s,
     member: team.find((m: any) => m._id === s.memberId),
@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const statuses = readCollection<OfficeStatus>("office");
+  const statuses = await readCollection<OfficeStatus>("office");
   const now = Date.now();
   const idx = statuses.findIndex((s) => s.memberId === body.memberId);
   if (idx !== -1) {
@@ -39,6 +39,6 @@ export async function POST(req: NextRequest) {
       lastUpdate: now,
     });
   }
-  writeCollection("office", statuses);
+  await writeCollection("office", statuses);
   return NextResponse.json({ ok: true });
 }
